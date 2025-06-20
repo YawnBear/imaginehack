@@ -91,18 +91,14 @@ export default function Call() {
             <p className="text-gray-400">Activating camera...</p>
           </div>
         )}
-      </div>
-
-      {/* Controls - Just camera flip button */}
-      <div className="bg-black bg-opacity-50 p-4">
-        <div className="flex justify-center">
-          <button
-            onClick={toggleCamera}
-            className="w-16 h-16 rounded-full bg-yellow-400 hover:bg-yellow-300 text-red-900 flex items-center justify-center"
-          >
-            🔄
-          </button>
-        </div>
+        
+        {/* Camera flip button positioned on the side */}
+        <button
+          onClick={toggleCamera}
+          className="absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 rounded-full bg-yellow-400 hover:bg-yellow-300 text-red-900 flex items-center justify-center shadow-lg z-10"
+        >
+          🔄
+        </button>
       </div>
 
       {/* Error Display */}
