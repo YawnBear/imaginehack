@@ -7,15 +7,19 @@ export async function POST(request) {
       return Response.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    // Build the outgoing multipart request
+    const contentType = file.type || 'application/octet-stream';
+    const filename = (file.name || 'audio').replace(/\s+/g, '_');
+
     const boundary = '----WebKitFormBoundary' + Math.random().toString(36).slice(2);
     const CRLF = '\r\n';
+
     const multipartBody =
       `--${boundary}${CRLF}` +
-      `Content-Disposition: form-data; name="audio"; filename="audio.wav"${CRLF}` +
-      `Content-Type: ${file.type || 'audio/wav'}${CRLF}${CRLF}` +
+      `Content-Disposition: form-data; name="audio"; filename="${filename}"${CRLF}` +
+      `Content-Type: ${contentType}${CRLF}${CRLF}` +
       buffer.toString('binary') + CRLF +
       `--${boundary}--${CRLF}`;
 
