@@ -7,7 +7,7 @@ export default function App() {
 
       {/* Header */}
       <div className="flex justify-between items-center mb-4 mt-10 pb-3">
-        <h1 className="text-3xl font-bold">Hi, Donkey</h1>
+        <h1 className="text-5xl font-bold">Hi, Donkey</h1>
         <div className="w-30 h-30 rounded-full bg-white p-1">
           <img
             src="https://cdn-icons-png.flaticon.com/512/1998/1998611.png"
