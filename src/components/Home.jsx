@@ -33,9 +33,9 @@ export default function App() {
       {/* Stats */}
       <div className="flex justify-between mb-6 text-center">
         {[
-          { count: 2, label: 'Collection', icon: <img className='h-7' src="/collectionYellow.png" alt="arrow"/>},
-          { count: 4, label: 'Calls', icon: <img className='h-7' src="/callYellow.png" alt="call"/> },
-          { count: 3, label: 'Visits', icon: <img className='h-7' src="/location.png" alt="location"/> },
+          { count: 7, label: 'Calls', icon: <img className='h-7' src="/callYellow.png" alt="call"/> },
+          { count: "4/21", label: 'Collections', icon: <img className='h-7' src="/collectionYellow.png" alt="arrow"/>},
+          { count: "2/10", label: 'Locations', icon: <img className='h-7' src="/location.png" alt="location"/> },
         ].map((item, i) => (
           <div key={i} className="bg-white text-black rounded-xl w-[30%] p-3">
             <div className='flex flex-row items-center justify-center gap-4 mb-2'>

@@ -33,9 +33,9 @@ export default function Profile() {
   };
   
   const stats = [
-    { label: 'Collections', count: 2 },
-    { label: 'Calls', count: 4 },
-    { label: 'Visits', count: 3 }
+    { label: 'Calls', count: "7" },
+    { label: 'Collections', count: "4/21" },
+    { label: 'Visits', count: "2/10" }
   ];
   
   return (

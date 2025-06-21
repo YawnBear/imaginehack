@@ -3,19 +3,37 @@ import { useState } from 'react';
 export default function Map() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [selectedTab, setSelectedTab] = useState('');
   
   const categories = [
-    { id: 'palace', name: 'Palace', icon: '🏯' },
-    { id: 'museums', name: 'Museums', icon: '🏛️' },
-    { id: 'mosque', name: 'Mosque', icon: '🕌' },
-    { id: 'houses', name: 'Houses', icon: '🏠' },
+    { id: 'palace', name: 'Palace', icon:  
+              <img
+                src={selectedTab==='palace' ? "/palaceRed.png": "/palace.png"}
+                alt="Palace"
+                className="w-5 h-5 object-contain"
+              /> },
+    { id: 'museums', name: 'Museums', icon: <img
+                src={selectedTab==='museums' ? "/museumRed.png": "/museum.png"}
+                alt="Museums"
+                className="w-5 h-5 object-contain"
+              /> },
+    { id: 'mosque', name: 'Mosque', icon: <img
+                src={selectedTab==='mosque' ? "/mosqueRed.png": "/mosque.png"}
+                alt="Mosque"
+                className="w-5 h-5 object-contain"
+              /> },
+    { id: 'houses', name: 'Houses', icon: <img
+                src={selectedTab==='houses' ? "/housesRed.png": "/houses.png"}
+                alt="Houses "
+                className="w-5 h-5 object-contain"
+              /> },
   ];
   
   const locations = [
     {
       id: 1,
       name: 'Abdullah Hukum Heritage House',
-      image: '/heritage-house.jpg',
+      image: '/abdulRahman.jpg',
       distance: '32 km away',
       address: '4MCG+83, 59200 Kuala Lumpur, Federal Territory of Kuala Lumpur',
       visited: false,
@@ -25,7 +43,7 @@ export default function Map() {
     {
       id: 2,
       name: 'The National Museum of Malaysia',
-      image: '/national-museum.jpg',
+      image: '/muzium.jpg',
       distance: '39 km away',
       address: 'Department of Museum, Jln Damansara, Perdana Botanical Gardens, 50566 Kuala Lumpur, Federal Territory of Kuala Lumpur',
       visited: true,
@@ -34,9 +52,15 @@ export default function Map() {
       favorite: false
     }
   ];
-  
+
   const handleCategorySelect = (categoryId) => {
-    setSelectedCategory(categoryId === selectedCategory ? 'All' : categoryId);
+    if (categoryId === selectedCategory) {
+      setSelectedCategory('All');
+      setSelectedTab(''); // Reset the selected tab when deselecting
+    } else {
+      setSelectedCategory(categoryId);
+      setSelectedTab(categoryId);
+    }
   };
   
   const handleSearch = (e) => {

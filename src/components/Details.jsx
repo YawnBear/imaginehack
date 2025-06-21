@@ -10,7 +10,7 @@ export default function Details({setDetails }) {
     title: 'Former Prime Minister of Malaysia',
     image: '/tunku.jpg',
     birth: 'Born in February 8 (Year 1903)',
-    death: 'Died in December 6 (Year 1990)',
+    death: 'Passed on December 6 (Year 1990)',
     bio: 'Tunku Abdul Rahman, commonly referred to as Tunku, was a Malaysian statesman who served as prime minister of Malaysia from 1957 to 1970. He previously served as the only chief minister of Malaya from 1955 to 1957, as President of UMNO from 1951 to 1971, and as leader of the Alliance Party from 1952 to 1971.',
   };
   
@@ -95,7 +95,7 @@ export default function Details({setDetails }) {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  Talk to Tunku
+                  Talk to Tunku Abdul Rahman
                 </button>
               </div>
             </div>
