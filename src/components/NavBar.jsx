@@ -39,7 +39,7 @@ export default function NavBar({setActiveTab, activeTab}) {
             className={"flex flex-col items-center justify-center w-1/5 py-2 text-red-700"}
           >
             <div className={`p-3 rounded-full ${
-              activeTab === 'camera' ? 'bg-red-700' : 'bg-gray-300'
+              activeTab === 'camera' ? 'bg-red-700' : 'bg-red-700'
             }`}>
               <div className="w-6 h-6 flex items-center justify-center">
               <img

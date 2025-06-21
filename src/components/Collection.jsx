@@ -8,28 +8,28 @@ export default function Collection() {
     { 
       id: 1, 
       name: 'Tunku Abdul Rahman', 
-      image: '/tunku.jpg', 
+      image: '/images/tunku.jpg', 
       category: 'PM',
       recent: true 
     },
     { 
       id: 2, 
       name: 'Hang Tuah', 
-      image: '/hangtuah.jpg', 
+      image: '/images/hangtuah.jpg', 
       category: 'Warrior',
       recent: false
     },
     { 
       id: 3, 
       name: 'P. Ramlee', 
-      image: '/pramlee.jpg', 
+      image: '/images/pramlee.jpg', 
       category: 'Artist',
       recent: false
     },
     { 
       id: 4, 
       name: 'Tun Hussein Onn', 
-      image: '/hussein.jpg', 
+      image: '/images/hussein.jpg', 
       category: 'PM',
       recent: false
     }
@@ -44,20 +44,20 @@ export default function Collection() {
     <div className="pt-6 bg-[#D71940] min-h-screen text-white">
       
       {/* Search and filter row */}
-      <div className="mb-6 flex items-center gap-2 m-4">
+      <div className="mb-20 flex items-center gap-2 m-4 mt-10">
         {/* Search bar (larger) */}
         <div className="flex-grow relative">
           <input
             type="text"
-            placeholder="Search historical figures..."
+            placeholder="Search friends..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full p-3 pl-10 rounded-full bg-white text-black font-medium border-2 border-yellow-400 focus:outline-none"
+            className="w-full p-3 pl-10 rounded-full bg-white text-black font-medium border-2 border-[#D9D9D9] focus:outline-none"
           />
           <svg 
             className="absolute left-3 top-3.5 w-5 h-5 text-gray-500" 
             fill="none" 
-            stroke="currentColor" 
+            stroke="#FFB902" 
             viewBox="0 0 24 24" 
             xmlns="http://www.w3.org/2000/svg"
           >
@@ -69,7 +69,7 @@ export default function Collection() {
         <select 
           value={selectedFilter}
           onChange={(e) => setSelectedFilter(e.target.value)}
-          className="p-3 rounded-full bg-white text-black font-medium border-2 border-yellow-400 focus:outline-none w-28"
+          className="p-3 rounded-full bg-white text-black font-medium border-2 border-[#D9D9D9] focus:outline-none w-28"
         >
           <option value="All">All</option>
           <option value="PM">PM</option>
@@ -79,9 +79,9 @@ export default function Collection() {
       </div>
       
       {/* Collection count */}
-      <div className="bg-white text-black rounded-t-3xl p-4 flex-grow flex flex-col min-h-[80vh] pb-20">      
+      <div className="bg-white text-black rounded-t-4xl p-4 flex-grow flex flex-col min-h-[80vh] pb-20">      
         <h2 className="text-xl font-semibold mb-4">
-          Your collection
+          Your collection (4)
         </h2>
         
         {/* Empty state when no results */}
@@ -99,9 +99,9 @@ export default function Collection() {
               className="relative rounded-xl overflow-hidden h-65 bg-gray-200"
             >
               {figure.recent && (
-                <div className="absolute top-2 left-2 bg-gray-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
+                <div className="absolute top-2 left-2 bg-gray-500/60 text-white text-xs px-2 py-1 rounded-full flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-1"></div>
-                  Created Recently
+                  Chatted Recently
                 </div>
               )}
               
