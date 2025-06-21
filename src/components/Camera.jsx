@@ -11,14 +11,8 @@ export default function Camera() {
   const [displayDetails, setDisplayDetails] = useState(true);
   const [isTalking, setIsTalking] = useState(false);
   
-  // WebSocket connection
-  const [socketConnected, setSocketConnected] = useState(false);
-  const socketRef = useRef(null);
-  const mediaRecorderRef = useRef(null);
-  
-  // Server configuration
-  const SERVER_URL = 'ws://localhost:8765'; // Replace with your Python WebSocket server URL
-  
+
+
   // Start camera stream
   const startCamera = async () => {
     try {
@@ -52,141 +46,11 @@ export default function Camera() {
       const tracks = videoRef.current.srcObject.getTracks();
       tracks.forEach(track => track.stop());
       
-      // Close existing WebSocket connection and media recorder
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      if (mediaRecorderRef.current) {
-        mediaRecorderRef.current.stop();
-      }
-      
       // Toggle facing mode
       const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
       setFacingMode(newFacingMode);
     } catch (err) {
       setError('Failed to switch camera: ' + err.message);
-    }
-  };
-
-  // Connect to WebSocket server and start streaming
-  const startStreaming = async () => {
-    if (!isStreaming || !videoRef.current || !videoRef.current.srcObject) {
-      setError('Camera stream not available');
-      return;
-    }
-
-    // Close existing connection if any
-    if (socketRef.current) {
-      socketRef.current.close();
-      setSocketConnected(false);
-    }
-
-    try {
-      // Create WebSocket connection
-      console.log('Connecting to WebSocket server:', SERVER_URL);
-      const socket = new WebSocket(SERVER_URL);
-      socketRef.current = socket;
-      
-      socket.onopen = () => {
-        console.log('WebSocket connection established');
-        setSocketConnected(true);
-        
-        try {
-          // Get the MIME type that's supported
-          let mimeType = 'video/webm;codecs=vp9,opus';
-          if (!MediaRecorder.isTypeSupported(mimeType)) {
-            mimeType = 'video/webm;codecs=vp8,opus';
-            if (!MediaRecorder.isTypeSupported(mimeType)) {
-              mimeType = 'video/webm';
-              if (!MediaRecorder.isTypeSupported(mimeType)) {
-                throw new Error('No supported MIME type for MediaRecorder');
-              }
-            }
-          }
-          
-          console.log(`Using MIME type: ${mimeType}`);
-          
-          // Setup media recorder with the stream
-          const mediaRecorder = new MediaRecorder(videoRef.current.srcObject, {
-            mimeType: mimeType,
-            videoBitsPerSecond: 1000000, // 1 Mbps
-            audioBitsPerSecond: 128000  // 128 kbps
-          });
-          mediaRecorderRef.current = mediaRecorder;
-          
-          // Send stream data to server when available
-          mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
-              socket.send(event.data);
-            }
-          };
-          
-          // Handle media recorder errors
-          mediaRecorder.onerror = (error) => {
-            console.error('Media Recorder error:', error);
-            setError('Recording error: ' + error.name);
-          };
-          
-          // Start recording with frequent data chunks for lower latency
-          mediaRecorder.start(100); // Generate data chunks every 100ms
-          console.log('MediaRecorder started');
-        } catch (err) {
-          console.error('MediaRecorder setup failed:', err);
-          setError('MediaRecorder setup failed: ' + err.message);
-        }
-      };
-      
-      // Handle WebSocket messages from server
-      socket.onmessage = (event) => {
-        try {
-          const message = JSON.parse(event.data);
-          
-          // Handle different message types from server
-          if (message.type === 'recognition_result') {
-            console.log('Recognition result:', message);
-            
-            // Check if any faces were recognized in the message
-            if (message.faces && message.faces.length > 0) {
-              // Face was recognized! Show details panel and button
-              setImageRecognized(true);
-              setDisplayDetails(true);
-              
-              // Optionally, you could use the specific face details from the message
-              // to customize what appears in the details panel
-              // const recognizedPerson = message.faces[0].name;
-              // const confidence = message.faces[0].confidence;
-            }
-          } else if (message.type === 'audio_response') {
-            // Play audio response if available
-            const audio = new Audio(message.data);
-            audio.play();
-          } else if (message.type === 'error') {
-            setError('Server error: ' + message.data);
-          }
-        } catch (err) {
-          console.error('Error parsing server message:', err);
-        }
-      };
-      
-      // Handle WebSocket errors
-      socket.onerror = (error) => {
-        console.error('WebSocket error:', error);
-        setError('Connection error');
-        setSocketConnected(false);
-      };
-      
-      // Handle WebSocket closure
-      socket.onclose = (event) => {
-        console.log('WebSocket connection closed:', event.code, event.reason);
-        setSocketConnected(false);
-        
-        // Stop media recorder if it's still running
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-          mediaRecorderRef.current.stop();
-        }
-      };
-    } catch (err) {
-      setError('Failed to connect: ' + err.message);
     }
   };
 
@@ -205,21 +69,19 @@ export default function Camera() {
     };
   }, [imageRecognized, displayDetails]);
 
-  // Start camera and connect to WebSocket when component mounts
+  // Start camera when component mounts
   useEffect(() => {
     let mounted = true;
 
+      // Update the setupCamera function to remove setDebugInfo
+    
     const setupCamera = async () => {
       try {
         await startCamera();
         
-        // Small delay to ensure camera is fully initialized
-        setTimeout(() => {
-          if (mounted && isStreaming) {
-            console.log('Camera is streaming, starting WebSocket connection');
-            startStreaming();
-          }
-        }, 1000);
+        // Simply return without setting up any frame counter
+        // since we no longer have debugging info to update
+        
       } catch (err) {
         console.error('Setup failed:', err);
         if (mounted) {
@@ -238,16 +100,6 @@ export default function Camera() {
         const tracks = videoRef.current.srcObject.getTracks();
         tracks.forEach(track => track.stop());
       }
-      
-      // Close WebSocket connection
-      if (socketRef.current) {
-        socketRef.current.close();
-      }
-      
-      // Stop media recorder
-      if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-        mediaRecorderRef.current.stop();
-      }
     };
   }, [facingMode]); // Only re-run when camera mode changes
 
@@ -259,7 +111,7 @@ export default function Camera() {
           ref={videoRef}
           autoPlay
           playsInline
-          muted={false}
+          muted={true}
           className="absolute inset-0 h-full w-full object-cover"
         />
         
@@ -273,42 +125,29 @@ export default function Camera() {
           <div className="absolute top-10 left-0 right-0 pl-15 z-20">
             <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs mx-auto">
               <h2 className="text-[#FFB902] font-bold text-lg mb-2">
-                Tunku Abdul Rahman
+                Tun V. T. Sambanthan
               </h2>
               <div className="border-l-4 border-[#CB1F40] pl-3 space-y-1 text-sm text-gray-700">
-                <p>Former Prime Minister of Malaysia</p>
-                <p>Years Served: 1951 - 1971</p>
-                <p>President of UMNO</p>
+                <p>Former Minister of Malaysia</p>
+                <p>Years Served: 1972 - 1974</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* Always show the button when image is recognized */}
+        {/* Show button when image is recognized */}
         {imageRecognized && (
           <button 
-            className={`absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl ${
-              socketConnected ? 'bg-green-500' : 'bg-yellow-400'
-            } hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold`}
-            onClick={() => {
-              setIsTalking(true);
-              // If not already talking, start
-              if (!isTalking && socketConnected) {
-                // Any additional action needed
-              }
-            }}
+            className="absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl
+              bg-green-500 hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold"
+            onClick={() => setIsTalking(true)}
           >
-            {socketConnected ? 'Start Conversation' : 'Connect...'}
+            Start Conversation
           </button>
         )}
 
         {isTalking && (
           <div className="absolute inset-x-0 bottom-10 flex justify-center gap-3 z-20">
-            {/* Connection Status */}
-            <div className={`px-4 py-2 rounded-full ${socketConnected ? 'bg-green-500' : 'bg-red-500'} text-white font-medium`}>
-              {socketConnected ? 'Connected' : 'Disconnected'}
-            </div>
-            
             {/* Camera Flip Button */}
             <button
               onClick={toggleCamera}
@@ -319,24 +158,10 @@ export default function Camera() {
               </svg>
             </button>
 
-            {/* End Streaming Button */}
+            {/* End Button */}
             <button 
               className="p-4 rounded-full bg-[#CB1F40]" 
-              onClick={() => {
-                setIsTalking(false);
-                
-                // Close WebSocket connection
-                if (socketRef.current) {
-                  socketRef.current.close();
-                }
-                
-                // Stop media recorder
-                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-                  mediaRecorderRef.current.stop();
-                }
-                
-                setSocketConnected(false);
-              }}
+              onClick={() => setIsTalking(false)}
             >
               <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
