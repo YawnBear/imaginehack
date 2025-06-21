@@ -75,8 +75,15 @@ export default function Camera() {
       return;
     }
 
+    // Close existing connection if any
+    if (socketRef.current) {
+      socketRef.current.close();
+      setSocketConnected(false);
+    }
+
     try {
       // Create WebSocket connection
+      console.log('Connecting to WebSocket server:', SERVER_URL);
       const socket = new WebSocket(SERVER_URL);
       socketRef.current = socket;
       
@@ -84,29 +91,49 @@ export default function Camera() {
         console.log('WebSocket connection established');
         setSocketConnected(true);
         
-        // Setup media recorder with the stream
-        const mediaRecorder = new MediaRecorder(videoRef.current.srcObject, {
-          mimeType: 'video/webm; codecs=vp9,opus', // This format works in most browsers
-          videoBitsPerSecond: 1000000, // 1 Mbps
-          audioBitsPerSecond: 128000  // 128 kbps
-        });
-        mediaRecorderRef.current = mediaRecorder;
-        
-        // Send stream data to server when available
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
-            socket.send(event.data);
+        try {
+          // Get the MIME type that's supported
+          let mimeType = 'video/webm;codecs=vp9,opus';
+          if (!MediaRecorder.isTypeSupported(mimeType)) {
+            mimeType = 'video/webm;codecs=vp8,opus';
+            if (!MediaRecorder.isTypeSupported(mimeType)) {
+              mimeType = 'video/webm';
+              if (!MediaRecorder.isTypeSupported(mimeType)) {
+                throw new Error('No supported MIME type for MediaRecorder');
+              }
+            }
           }
-        };
-        
-        // Handle media recorder errors
-        mediaRecorder.onerror = (error) => {
-          console.error('Media Recorder error:', error);
-          setError('Recording error: ' + error.name);
-        };
-        
-        // Start recording with frequent data chunks for lower latency
-        mediaRecorder.start(100); // Generate data chunks every 100ms
+          
+          console.log(`Using MIME type: ${mimeType}`);
+          
+          // Setup media recorder with the stream
+          const mediaRecorder = new MediaRecorder(videoRef.current.srcObject, {
+            mimeType: mimeType,
+            videoBitsPerSecond: 1000000, // 1 Mbps
+            audioBitsPerSecond: 128000  // 128 kbps
+          });
+          mediaRecorderRef.current = mediaRecorder;
+          
+          // Send stream data to server when available
+          mediaRecorder.ondataavailable = (event) => {
+            if (event.data.size > 0 && socket.readyState === WebSocket.OPEN) {
+              socket.send(event.data);
+            }
+          };
+          
+          // Handle media recorder errors
+          mediaRecorder.onerror = (error) => {
+            console.error('Media Recorder error:', error);
+            setError('Recording error: ' + error.name);
+          };
+          
+          // Start recording with frequent data chunks for lower latency
+          mediaRecorder.start(100); // Generate data chunks every 100ms
+          console.log('MediaRecorder started');
+        } catch (err) {
+          console.error('MediaRecorder setup failed:', err);
+          setError('MediaRecorder setup failed: ' + err.message);
+        }
       };
       
       // Handle WebSocket messages from server
@@ -178,14 +205,26 @@ export default function Camera() {
     };
   }, [imageRecognized, displayDetails]);
 
-  // Start camera and connect to WebSocket immediately
+  // Start camera and connect to WebSocket when component mounts
   useEffect(() => {
+    let mounted = true;
+
     const setupCamera = async () => {
-      await startCamera();
-      
-      // Once camera is started, begin streaming to server
-      if (isStreaming && !isTalking) {
-        startStreaming();
+      try {
+        await startCamera();
+        
+        // Small delay to ensure camera is fully initialized
+        setTimeout(() => {
+          if (mounted && isStreaming) {
+            console.log('Camera is streaming, starting WebSocket connection');
+            startStreaming();
+          }
+        }, 1000);
+      } catch (err) {
+        console.error('Setup failed:', err);
+        if (mounted) {
+          setError('Setup failed: ' + err.message);
+        }
       }
     };
     
@@ -193,6 +232,8 @@ export default function Camera() {
     
     // Clean up function
     return () => {
+      mounted = false;
+      
       if (videoRef.current && videoRef.current.srcObject) {
         const tracks = videoRef.current.srcObject.getTracks();
         tracks.forEach(track => track.stop());
@@ -208,7 +249,7 @@ export default function Camera() {
         mediaRecorderRef.current.stop();
       }
     };
-  }, [facingMode, isStreaming]); // Re-run when facingMode or isStreaming changes
+  }, [facingMode]); // Only re-run when camera mode changes
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -228,36 +269,37 @@ export default function Camera() {
           </div>
         )}
 
-        {imageRecognized && (
-          <>
-            {displayDetails && (
-              <div className="absolute top-10 left-0 right-0 pl-15">
-                {/* Content for details panel */}
-                <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs mx-auto">
-                  <h2 className="text-[#FFB902] font-bold text-lg mb-2">
-                    Tunku Abdul Rahman
-                  </h2>
-                  <div className="border-l-4 border-[#CB1F40] pl-3 space-y-1 text-sm text-gray-700">
-                    <p>Former Prime Minister of Malaysia</p>
-                    <p>Years Served: 1951 - 1971</p>
-                    <p>President of UMNO</p>
-                  </div>
-                </div>
+        {imageRecognized && displayDetails && (
+          <div className="absolute top-10 left-0 right-0 pl-15 z-20">
+            <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs mx-auto">
+              <h2 className="text-[#FFB902] font-bold text-lg mb-2">
+                Tunku Abdul Rahman
+              </h2>
+              <div className="border-l-4 border-[#CB1F40] pl-3 space-y-1 text-sm text-gray-700">
+                <p>Former Prime Minister of Malaysia</p>
+                <p>Years Served: 1951 - 1971</p>
+                <p>President of UMNO</p>
               </div>
-            )}
-            
-            <button 
-              className={`absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl ${socketConnected ? 'bg-green-500' : 'bg-yellow-400'} hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold`}
-              onClick={() => {
-                setDisplayDetails(false); 
-                setImageRecognized(false); 
-                setIsTalking(true);
-                startStreaming(); // Start streaming to server
-              }}
-            >
-              {socketConnected ? 'Streaming...' : 'Start Streaming'}
-            </button>
-          </>
+            </div>
+          </div>
+        )}
+
+        {/* Always show the button when image is recognized */}
+        {imageRecognized && (
+          <button 
+            className={`absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl ${
+              socketConnected ? 'bg-green-500' : 'bg-yellow-400'
+            } hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold`}
+            onClick={() => {
+              setIsTalking(true);
+              // If not already talking, start
+              if (!isTalking && socketConnected) {
+                // Any additional action needed
+              }
+            }}
+          >
+            {socketConnected ? 'Start Conversation' : 'Connect...'}
+          </button>
         )}
 
         {isTalking && (

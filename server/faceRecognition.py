@@ -10,6 +10,7 @@ from io import BytesIO
 import tempfile
 import threading
 import queue
+import traceback  # For better error reporting
 
 # Shared queue for frames between WebSocket thread and processing thread
 frame_queue = queue.Queue(maxsize=10)
@@ -155,7 +156,6 @@ async def handle_client(websocket, path):
     
     # Keep track of frames received
     frame_count = 0
-    decoded_frame = None
     
     try:
         # Send a welcome message
@@ -169,26 +169,31 @@ async def handle_client(websocket, path):
             try:
                 # Process binary data (video frames)
                 if isinstance(message, bytes):
-                    # Save the binary data to a temporary file
-                    with tempfile.NamedTemporaryFile(suffix='.webm', delete=True) as temp:
+                    # Create a temporary file to store the WebM chunk
+                    with tempfile.NamedTemporaryFile(suffix='.webm', delete=False) as temp:
+                        temp_path = temp.name
                         temp.write(message)
                         temp.flush()
-                        
-                        # Open the video file
-                        cap = cv2.VideoCapture(temp.name)
-                        if cap.isOpened():
-                            success, frame = cap.read()
-                            if success:
-                                # Put frame in queue for processing
-                                frame_count += 1
-                                print(f"Received frame {frame_count}")
-                                
-                                # Skip frames if queue is full to avoid lag
-                                if not frame_queue.full():
-                                    frame_queue.put(frame)
-                                
-                                decoded_frame = frame
-                            cap.release()
+                    
+                    # Open the video file with OpenCV
+                    cap = cv2.VideoCapture(temp_path)
+                    if cap.isOpened():
+                        success, frame = cap.read()
+                        if success:
+                            # Put frame in queue for processing
+                            frame_count += 1
+                            print(f"Received frame {frame_count}")
+                            
+                            # Skip frames if queue is full to avoid lag
+                            if not frame_queue.full():
+                                frame_queue.put(frame)
+                        cap.release()
+                    
+                    # Clean up the temp file
+                    try:
+                        os.unlink(temp_path)
+                    except:
+                        pass
                 
                 # Process JSON commands
                 else:

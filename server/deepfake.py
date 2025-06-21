@@ -1,82 +1,100 @@
+from common_imports import *
+import os
 import requests
-import json
-import time
+import base64
 
-dIDAPI = "ZGx0eXgwNEBnbWFpbC5jb20:Ss06R0hEqan93gdM9IhUx"
-imageUrl = "https://imaginehack.vercel.app/tun1.png"
-textInput = "Greetings! I'm Tun V. T. Sambanthan, a founding father of Malaysia and former MIC president. I am delighted to meet you and share our journey toward unity."
+# --- Configuration ---
+DID_API_KEY = os.getenv("DID_API_KEY")
+if not DID_API_KEY:
+    raise ValueError("Cannot retrieve API Key for d-ID")
 
-urlGenerate = "https://api.d-id.com/talks"
-headers = {
+DID_CONFIG = {
+    "api_key": DID_API_KEY,
+    "generate_url": "https://api.d-id.com/talks",
+    "get_url": "https://api.d-id.com/talks/{talk_id}",
+    "image_url": "https://imaginehack.vercel.app/tun1.png",
+    "voice_id": "en-IN-PrabhatNeural",
+}
+
+DID_HEADERS = {
     "accept": "application/json",
     "content-type": "application/json",
-    "authorization": f"Basic {dIDAPI}"
+    "authorization": f"Basic {DID_API_KEY}"
 }
 
-payload = {
-    "source_url": imageUrl,
-    "script": {
-        "type": "text",
-        "input": textInput,
-        "provider": {
-            "type": "microsoft",
-            "voice_id": "en-IN-PrabhatNeural"
-        },
-        "ssml": False
-    },
-    "config": {
-        "fluent": False
-    }
-}
+if TYPE_CHECKING:
+    from .sesh_handler import ClientSession
 
-response = requests.post(urlGenerate, headers=headers, data=json.dumps(payload))
-data = response.json()
-talkId = data.get("id")
-print("SENDING DATA")
-print("Status:", response.status_code)
-print("Response:", response.json())
-print("RECEIVED DATA")
-print("talkid = ", talkId)
+class DIDStreamingClient:
+    def __init__(self, session: ClientSession) -> None:
+        self.session: ClientSession = session
+        self.talk_id: Optional[str] = None
 
-videoUrl = None
-urlGet = f"https://api.d-id.com/talks/{talkId}"
+    async def run(self) -> None:
+        try:
+            send_task = asyncio.create_task(self.send_text())
+            recv_task = asyncio.create_task(self.receive_video())
+            await asyncio.gather(send_task, recv_task)
+        except Exception as e:
+            logger.error(f"[DID] Error in streaming: {e}")
 
-print("Waiting for video to be ready...")
+    async def send_text(self) -> None:
+        text = await self.session.d_id_queue.get()
+        payload = {
+            "source_url": DID_CONFIG["image_url"],
+            "script": {
+                "type": "text",
+                "input": text,
+                "provider": {
+                    "type": "microsoft",
+                    "voice_id": DID_CONFIG["voice_id"]
+                }
+            }
+        }
+        
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None, lambda: requests.post(DID_CONFIG["generate_url"], 
+                                      headers=DID_HEADERS, 
+                                      data=json.dumps(payload))
+        )
+        
+        data = response.json()
+        self.talk_id = data.get("id")
+        logger.info(f"[DID] Talk ID: {self.talk_id}")
 
-while True:
-    status_response = requests.get(urlGet, headers=headers)
-    status_data = status_response.json()
-    status = status_data.get("status")
-    print("Status:", status)
+    async def receive_video(self) -> None:
+        while True:
+            if self.talk_id:
+                video_url = await self.poll_for_video()
+                if video_url:
+                    await self.stream_video(video_url)
+                    self.talk_id = None
+            await asyncio.sleep(1)
 
-    if status == "done":
-        video_url = status_data.get("result_url")
-        audio_url = status_data.get("audio_url")
-        break
-    elif status == "error":
-        print("Error:", status_data)
-        break
-    # time.sleep(1)
+    async def poll_for_video(self) -> Optional[str]:
+        url = DID_CONFIG["get_url"].format(talk_id=self.talk_id)
+        loop = asyncio.get_event_loop()
+        
+        response = await loop.run_in_executor(
+            None, lambda: requests.get(url, headers=DID_HEADERS)
+        )
+        
+        data = response.json()
+        if data.get("status") == "done":
+            return data.get("result_url")
+        return None
 
-
-
-#download video
-if video_url:
-    video_response = requests.get(video_url, stream=True)
-    with open("output.mp4", "wb") as f:
-        for chunk in video_response.iter_content(chunk_size=8192):
-            f.write(chunk)
-    print("Video downloaded as output.mp4")
-
-else:
-    print("No video URL found.")
-
-#download audio
-if audio_url:
-    audio_response = requests.get(audio_url, stream=True)
-    with open("output.mp3", "wb") as f:
-        for chunk in audio_response.iter_content(chunk_size=8192):
-            f.write(chunk)
-    print("Audio downloaded as output.mp3")
-else:
-    print("No audio URL found.")
+    async def stream_video(self, video_url: str) -> None:
+        loop = asyncio.get_event_loop()
+        response = await loop.run_in_executor(
+            None, lambda: requests.get(video_url, stream=True)
+        )
+        
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                video_data = base64.b64encode(chunk).decode('utf-8')
+                await self.session.websocket.send(json.dumps({
+                    "type": "video_chunk",
+                    "data": video_data
+                }))

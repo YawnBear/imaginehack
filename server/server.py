@@ -5,6 +5,7 @@ import json
 import os
 import uuid
 from datetime import datetime
+from faceRecognition import *
 
 # Directory to save received media chunks
 MEDIA_DIR = "received_media"
@@ -82,5 +83,6 @@ async def main():
     print("WebSocket server started at ws://localhost:8765")
     await server.wait_closed()
 
+# The main function is already defined in faceRecognition.py
 if __name__ == "__main__":
     asyncio.run(main())
