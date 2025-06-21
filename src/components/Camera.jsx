@@ -9,7 +9,7 @@ export default function Camera({ setActiveTab }) {
   const [imageRecognized, setImageRecognized] = useState(false);
   const [displayDetails, setDisplayDetails] = useState(true);
   const [isTalking, setIsTalking] = useState(false);
-const [isMuted, setIsMuted] = useState(false); // Default to muted
+const [isMuted, setIsMuted] = useState(true); // Default to muted
   
   // Start camera stream - removed facingMode toggle
   const startCamera = async () => {
@@ -96,11 +96,38 @@ const [isMuted, setIsMuted] = useState(false); // Default to muted
     };
   }, []); // Removed facingMode dependency
 
-  handleMuteButtonClick = () => {
-    try{
-      
+  // Fix handleMuteButtonClick function
+  
+  const handleMuteButtonClick = async () => {
+    try {
+      // Toggle audio tracks
+      if (videoRef.current && videoRef.current.srcObject) {
+        const audioTracks = videoRef.current.srcObject.getAudioTracks();
+        audioTracks.forEach(track => {
+          track.enabled = !track.enabled;
+        });
+        setIsMuted(prevState => !prevState);
+        
+        // Call API when unmuting (starting to talk)
+        if (!isMuted) {
+          console.log('Submitting audio to API...');
+          const response = await fetch('/api/submitAudio', { 
+            method: 'POST' 
+          });
+          
+          if (!response.ok) {
+            console.error('Failed to submit audio:', await response.text());
+          } else {
+            const data = await response.json();
+            console.log('Audio submission successful:', data);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error toggling mute or submitting audio:', error);
+      setError('Failed to process audio: ' + error.message);
     }
-  }
+  };
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -143,6 +170,7 @@ const [isMuted, setIsMuted] = useState(false); // Default to muted
               setIsTalking(true);
               setDisplayDetails(false);
               setImageRecognized(false);
+              handleMuteButtonClick();
             }}
           >
             Start Conversation
@@ -181,7 +209,12 @@ const [isMuted, setIsMuted] = useState(false); // Default to muted
             </button>
             <button 
               className="p-4 rounded-full bg-[#CB1F40]" 
-              onClick={() => {setIsTalking(false) ; setActiveTab('home') ; setImageRecognized(false) ;setDisplayDetails(true)}}
+              onClick={() => {
+                setIsTalking(false);
+                setActiveTab('home');
+                setImageRecognized(false);
+                setDisplayDetails(true);
+              }}
             >
               <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -191,7 +224,10 @@ const [isMuted, setIsMuted] = useState(false); // Default to muted
         )}
       </div>
       <button
-        onClick={() => setImageRecognized(true) && setDisplayDetails(true)}
+        onClick={() => {
+          setImageRecognized(true);
+          setDisplayDetails(true);
+        }}
         className="absolute w-10 h-20 right-6 bottom-25 px-4 py-2 rounded-lg border border-white/50 bg-transparent hover:bg-white/10 text-sm text-white font-medium backdrop-blur-sm shadow-sm transition-colors"
       >
         
