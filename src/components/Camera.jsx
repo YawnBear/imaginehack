@@ -46,11 +46,18 @@ const [receivedAudioUrl, setReceivedAudioUrl] = useState(false); // New state fo
     };
 
 mediaRecorderRef.current.onstop = async () => {
-  const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+  const mimeType = MediaRecorder.isTypeSupported('audio/webm')
+  ? 'audio/webm'
+  : MediaRecorder.isTypeSupported('audio/ogg')
+  ? 'audio/ogg'
+  : 'audio/wav';
+
+const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+const extension = mimeType.split('/')[1] || 'webm';
 
   try {
     const formData = new FormData();
-    formData.append('file', audioBlob, 'recording.wav'); // must match "audio.wav" in backend
+    formData.append('file', audioBlob, `recording.${extension}`);
 
     const res = await fetch('/api/submit-audio', {
       method: 'POST',
