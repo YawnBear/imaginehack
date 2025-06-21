@@ -7,7 +7,7 @@ export default function Call() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
   const [facingMode, setFacingMode] = useState('environment');
-  const [imageRecognized, setImageRecognized] = useState(true);
+  const [imageRecognized, setImageRecognized] = useState(false);
   const [displayDetails, setDisplayDetails] = useState(true);
   const [isTalking, setIsTalking] = useState(false);
 
