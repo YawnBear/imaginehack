@@ -60,6 +60,11 @@ Developed by Quadrabyte
       ```bash
       pip install -r requirements.txt
       ```
+## :heart: Contributors 
+1. Lim Yu Xuen - UIUX Designer 
+2. Loo Tan Yu Xian - Fronend Developer 
+3. Ong Jun Hong - Full Stack Developer
+4. Tee Jun Fong - Backend Developer
 
 ---
 
