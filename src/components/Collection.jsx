@@ -10,7 +10,7 @@ export default function Collection() {
     { 
       id: 1, 
       name: 'V. T. Sambanthan', 
-      image: '/tun.jpg', 
+      image: '/sambanthan.jpg', 
       category: 'PM',
       recent: true 
     },

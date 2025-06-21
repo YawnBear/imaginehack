@@ -67,12 +67,12 @@ export default function Details({ figure, onBack }) {
           
           {/* Birth and death */}
           <div className="space-y-3 mb-6">
-            <div className="bg-[#CB1f4O] text-white px-4 py-3 rounded-full flex items-center">
+            <div className="bg-[#D71940] text-white px-4 py-3 rounded-full flex items-center">
               <div className="w-4 h-4 rounded-full border-2 border-white mr-3"></div>
               <span>{figureData.birth}</span>
             </div>
             
-            <div className="bg-red-500 text-white px-4 py-3 rounded-full flex items-center">
+            <div className="bg-[#D71940] text-white px-4 py-3 rounded-full flex items-center">
               <div className="w-4 h-4 rounded-full border-2 border-white mr-3"></div>
               <span>{figureData.death}</span>
             </div>
@@ -85,7 +85,7 @@ export default function Details({ figure, onBack }) {
           
           {/* Action button */}
           <div className="mt-8">
-            <button className="w-full bg-red-500 text-white font-bold py-3 rounded-xl text-lg flex items-center justify-center gap-3">
+            <button className="w-full bg-red-700 text-white font-bold py-3 rounded-xl text-lg flex items-center justify-center gap-3">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
