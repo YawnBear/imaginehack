@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Call from '@/components/Camera.jsx';
+import Camera from '@/components/Camera.jsx';
 import Home from '@/components/Home.jsx';
 import Collection from '@/components/Collection.jsx';
 import Map from '@/components/Location.jsx';
@@ -20,7 +20,7 @@ export default function App() {
       case 'collection':
         return <Collection />;
       case 'camera':
-        return <Call />;
+        return <Camera setActiveTab={setActiveTab}/>;
       case 'map':
         return <Map />;
       case 'profile':

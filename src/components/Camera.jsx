@@ -2,23 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 
-export default function Camera() {
+export default function Camera({ setActiveTab }) {
   const videoRef = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
-  const [facingMode, setFacingMode] = useState('environment');
   const [imageRecognized, setImageRecognized] = useState(false);
   const [displayDetails, setDisplayDetails] = useState(true);
   const [isTalking, setIsTalking] = useState(false);
+const [isMuted, setIsMuted] = useState(false); // Default to muted
   
-
-
-  // Start camera stream
+  // Start camera stream - removed facingMode toggle
   const startCamera = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: facingMode,
+          facingMode: 'environment', // Fixed to environment camera
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
@@ -51,25 +49,6 @@ export default function Camera() {
     }
   };
 
-  // Toggle camera between front and back
-  const toggleCamera = async () => {
-    if (!videoRef.current || !videoRef.current.srcObject) {
-      return;
-    }
-    
-    try {
-      // Stop current tracks
-      const tracks = videoRef.current.srcObject.getTracks();
-      tracks.forEach(track => track.stop());
-      
-      // Toggle facing mode
-      const newFacingMode = facingMode === 'user' ? 'environment' : 'user';
-      setFacingMode(newFacingMode);
-    } catch (err) {
-      setError('Failed to switch camera: ' + err.message);
-    }
-  };
-
   // Auto-hide details panel after 7 seconds
   useEffect(() => {
     let timer = null;
@@ -88,8 +67,6 @@ export default function Camera() {
   // Start camera when component mounts
   useEffect(() => {
     let mounted = true;
-
-      // Update the setupCamera function to remove setDebugInfo
     
     const setupCamera = async () => {
       try {
@@ -117,7 +94,13 @@ export default function Camera() {
         tracks.forEach(track => track.stop());
       }
     };
-  }, [facingMode]); // Only re-run when camera mode changes
+  }, []); // Removed facingMode dependency
+
+  handleMuteButtonClick = () => {
+    try{
+      
+    }
+  }
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -151,33 +134,54 @@ export default function Camera() {
           </div>
         )}
 
-        {/* Show button when image is recognized */}
-        {imageRecognized && (
+        {/* Show button when image is recognized and not talking */}
+        {imageRecognized && !isTalking && (
           <button 
             className="absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl
-              bg-green-500 hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold"
-            onClick={() => setIsTalking(true)}
+              bg-yellow-400 hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold"
+            onClick={() => {
+              setIsTalking(true);
+              setDisplayDetails(false);
+              setImageRecognized(false);
+            }}
           >
             Start Conversation
           </button>
         )}
 
+        {/* Show control buttons when talking - removed toggle camera button */}
         {isTalking && (
-          <div className="absolute inset-x-0 bottom-10 flex justify-center gap-3 z-20">
-            {/* Camera Flip Button */}
-            <button
-              onClick={toggleCamera}
-              className="p-4 rounded-full bg-white"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-            </button>
+          <div className="absolute inset-x-0 bottom-25 flex justify-center gap-3 z-20">
 
-            {/* End Button */}
+            <button
+              className="p-4 rounded-full bg-white/20 backdrop-blur-sm"
+              onClick={() => {
+                // Toggle audio tracks
+                if (videoRef.current && videoRef.current.srcObject) {
+                  const audioTracks = videoRef.current.srcObject.getAudioTracks();
+                  audioTracks.forEach(track => {
+                    track.enabled = !track.enabled;
+                  });
+                  setIsMuted(prevState => !prevState);
+                }
+              }}
+            >
+              {isMuted ? (
+                // Muted icon (microphone with slash)
+                <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18" />
+                </svg>
+              ) : (
+                // Unmuted icon (microphone)
+                <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+              )}
+            </button>
             <button 
               className="p-4 rounded-full bg-[#CB1F40]" 
-              onClick={() => setIsTalking(false)}
+              onClick={() => {setIsTalking(false) ; setActiveTab('home') ; setImageRecognized(false) ;setDisplayDetails(true)}}
             >
               <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -185,19 +189,13 @@ export default function Camera() {
             </button>
           </div>
         )}
-
-        {/* Camera flip button when not talking */}
-        {!isTalking && (
-          <button
-            onClick={toggleCamera}
-            className="absolute right-6 top-6 w-12 h-12 rounded-full bg-black/30 backdrop-blur-sm hover:bg-black/50 flex items-center justify-center shadow-lg z-10"
-          >
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
-          </button>
-        )}
       </div>
+      <button
+        onClick={() => setImageRecognized(true) && setDisplayDetails(true)}
+        className="absolute w-10 h-20 right-6 bottom-25 px-4 py-2 rounded-lg border border-white/50 bg-transparent hover:bg-white/10 text-sm text-white font-medium backdrop-blur-sm shadow-sm transition-colors"
+      >
+        
+      </button>
 
       {/* Error Display */}
       {error && (
