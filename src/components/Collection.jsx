@@ -44,7 +44,7 @@ export default function Collection() {
   
   return (
     <>
-    {details ? <Details details={details} setDetails={setDetails}/> : 
+    {details ? <Details id={historicalFigures.id} setDetails={setDetails}/> : 
     <div className="pt-6 bg-[#D71940] min-h-screen text-white">
       
       {/* Search and filter row */}
