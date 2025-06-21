@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# herita - Bringing Malaysia’s History to Life with AI & AR
 
-## Getting Started
+Developed by Quadrabyte
 
-First, run the development server:
+## What is herita?
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+**herita** is an AI-powered platform that brings Malaysian heritage to life through cutting-edge computer vision (CV) and augmented reality (AR) experiences. Discover, interact with, and collect historical figures and artifacts using advanced face recognition and real-time AI dialogue.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Key Features
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+- **Smart CV Recognition**  
+  Detects heritage sites, artifacts, and portraits using computer vision.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **AR Interactions**  
+  Interact with AI-trained historical figures in real time.
 
-## Learn More
+- **Authentic Dialogue**  
+  AI mimics the speech, beliefs, and behaviors of real Malaysian figures.
 
-To learn more about Next.js, take a look at the following resources:
+- **Scan & Collect**  
+  Scan artifacts to unlock and “collect” heritage figures.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- **Call Anytime**  
+  Revisit conversations with collected figures anytime from your personal collection.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
+## Installation
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. **Clone this repository:**
+    ```bash
+    git clone https://github.com/YawnBear/imaginehack
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+2. **Frontend Setup (React)**
+    * Install Node dependencies:
+      ```bash
+      npm install
+      ```
+    
+    * Start the React development server:
+      ```bash
+      npm start
+      ```
+
+3. **Backend Setup (Python)**
+    * (Recommended) Create and activate a virtual environment:
+      (On Linux/Mac)
+      ```bash
+      python -m venv venv
+      source venv/bin/activate
+      ```
+      (On Windows)
+      ```powershell
+      python -m venv venv
+      .\venv\Scripts\Activate
+      ```
+
+    * Install Python dependencies:
+      ```bash
+      pip install -r requirements.txt
+      ```
+
+---
+
+## License
+This project is licensed under the MIT License.
+
+## Acknowledgements
+Built with [face\_recognition](https://github.com/ageitgey/face_recognition), [OpenCV](https://opencv.org/), and other open-source technologies.
