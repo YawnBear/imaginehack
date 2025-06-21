@@ -7,6 +7,9 @@ export default function Call() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
   const [facingMode, setFacingMode] = useState('environment');
+  const [imageRecognized, setImageRecognized] = useState(true);
+  const [displayDetails, setDisplayDetails] = useState(true);
+  const [isTalking, setIsTalking] = useState(false);
 
   // Start camera stream
   const startCamera = async () => {
@@ -91,14 +94,58 @@ export default function Call() {
             <p className="text-gray-400">Activating camera...</p>
           </div>
         )}
-        
+
+        {imageRecognized && (
+          <>
+            {displayDetails && (
+              <div className="absolute top-10 left-0 right-0 pl-15">
+                {/* Content for details panel */}
+                  <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs">
+                  <h2 className="text-[#FFB902] font-bold text-lg mb-2">
+                    Tunku Abdul Rahman
+                  </h2>
+                  <div className="border-l-4 border-[#CB1F40] pl-3 space-y-1 text-sm text-gray-700">
+                    <p>Former Prime Minister of Malaysia</p>
+                    <p>Years Served: 1951 - 1971</p>
+                    <p>President of UMNO</p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            <button className="absolute bottom-28 left-1/2 transform -translate-x-1/2 w-50 h-16 rounded-3xl bg-yellow-400 hover:bg-yellow-300 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold"
+              onClick={() => {setDisplayDetails(false); setImageRecognized(false); setIsTalking(true);}}>
+              Talk
+            </button>
+          </>
+        )}
+
+        {isTalking && (
+          <div className="flex gap-2 p-2 rounded-2xl bg-[rgba(0,0,0,0.4)] absolute bottom-30 left-1/2 transform -translate-x-1/2 z-20">
+            {/* Speaker Button */}
+            <button className="bg-white p-3 rounded-xl">
+              <img src="/speaker.png" alt="Speaker" className="w-5" />
+            </button>
+
+            {/* Microphone Button */}
+            <button className="bg-white p-3 rounded-xl">
+              <img src="/microphone.png" alt="Microphone" className="w-4" />
+            </button>
+
+            {/* Close Button */}
+            <button className="bg-[#CB1F40] p-3 rounded-xl" onClick={() => setIsTalking(false)}>
+              <img src="/x.png" alt="Close" className="w-5 h-5" />
+            </button>
+          </div>
+        )}
+
         {/* Camera flip button positioned on the side */}
-        <button
+        {/* <button
           onClick={toggleCamera}
           className="absolute right-6 top-1/2 transform -translate-y-1/2 w-14 h-14 rounded-full bg-yellow-400 hover:bg-yellow-300 text-red-900 flex items-center justify-center shadow-lg z-10"
         >
           🔄
-        </button>
+        </button> */}
       </div>
 
       {/* Error Display */}
