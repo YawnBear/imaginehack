@@ -80,8 +80,8 @@ export default function Collection() {
       
       {/* Collection count */}
       <div className="bg-white text-black rounded-t-4xl p-4 flex-grow flex flex-col min-h-[80vh] pb-20">      
-        <h2 className="text-xl font-semibold mb-4">
-          Your collection (4)
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          Your have 4 friends
         </h2>
         
         {/* Empty state when no results */}
