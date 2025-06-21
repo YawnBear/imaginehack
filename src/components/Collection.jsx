@@ -11,14 +11,14 @@ export default function Collection() {
       id: 1, 
       name: 'V. T. Sambanthan', 
       image: '/sambanthan.jpg', 
-      category: 'PM',
+      category: 'minister',
       recent: true 
     },
     { 
       id: 2, 
       name: 'Tunku Abdul Rahman', 
       image: '/tunku.jpg', 
-      category: 'PM',
+      category: 'minister',
       recent: false
     },
     { 
@@ -76,7 +76,7 @@ export default function Collection() {
           className="p-3 rounded-full bg-white text-black font-medium border-2 border-[#D9D9D9] focus:outline-none w-28"
         >
           <option value="All">All</option>
-          <option value="PM">PM</option>
+          <option value="minister">Minister</option>
           <option value="Warrior">Warrior</option>
           <option value="Artist">Artist</option>
         </select>
