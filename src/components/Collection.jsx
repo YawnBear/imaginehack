@@ -1,38 +1,40 @@
 import { useState } from 'react';
+import Details from './Details.jsx';
 
 export default function Collection() {
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [details, setDetails] = useState(false);
   
   const historicalFigures = [
     { 
       id: 1, 
-      name: 'Tunku Abdul Rahman', 
-      image: '/images/tunku.jpg', 
+      name: 'V. T. Sambanthan', 
+      image: '/tun.jpg', 
       category: 'PM',
       recent: true 
     },
     { 
       id: 2, 
-      name: 'Hang Tuah', 
-      image: '/images/hangtuah.jpg', 
-      category: 'Warrior',
+      name: 'Tunku Abdul Rahman', 
+      image: '/tunku.jpg', 
+      category: 'PM',
       recent: false
     },
     { 
       id: 3, 
-      name: 'P. Ramlee', 
-      image: '/images/pramlee.jpg', 
-      category: 'Artist',
+      name: 'Hang Tuah', 
+      image: '/hangtuah.jpg', 
+      category: 'Warrior',
       recent: false
     },
     { 
       id: 4, 
-      name: 'Tun Hussein Onn', 
-      image: '/images/hussein.jpg', 
-      category: 'PM',
+      name: 'P. Ramlee', 
+      image: '/pramlee.jpg', 
+      category: 'Artist',
       recent: false
-    }
+    },
   ];
   
   // Filter figures based on selected category and search query
@@ -41,6 +43,8 @@ export default function Collection() {
     .filter(figure => figure.name.toLowerCase().includes(searchQuery.toLowerCase()));
   
   return (
+    <>
+    {details ? <Details details={details} setDetails={setDetails}/> : 
     <div className="pt-6 bg-[#D71940] min-h-screen text-white">
       
       {/* Search and filter row */}
@@ -97,6 +101,7 @@ export default function Collection() {
             <div 
               key={figure.id} 
               className="relative rounded-xl overflow-hidden h-65 bg-gray-200"
+              onClick={() => setDetails(true)}
             >
               {figure.recent && (
                 <div className="absolute top-2 left-2 bg-gray-500/60 text-white text-xs px-2 py-1 rounded-full flex items-center">
@@ -119,5 +124,9 @@ export default function Collection() {
         </div>
       </div>
     </div>
+    }
+    
+    </>
+    
   );
 }
