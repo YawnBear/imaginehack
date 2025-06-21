@@ -40,7 +40,7 @@ Developed by Quadrabyte
     
     * Start the React development server:
       ```bash
-      npm start
+      npm run dev
       ```
 
 3. **Backend Setup (Python)**
