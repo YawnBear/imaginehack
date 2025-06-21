@@ -1,59 +1,92 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react'; 
 
 export default function Camera({ setActiveTab }) {
   const videoRef = useRef(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState('');
   const [imageRecognized, setImageRecognized] = useState(false);
-  const [displayDetails, setDisplayDetails] = useState(true);
+  const [displayDetails, setDisplayDetails] = useState(false);
   const [isTalking, setIsTalking] = useState(false);
-const [isMuted, setIsMuted] = useState(true); // Default to muted
+  const [isMuted, setIsMuted] = useState(false); 
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const [videoUrl, setVideoUrl] = useState(null);
+const [receivedAudioUrl, setReceivedAudioUrl] = useState(false); // New state for audio URL
+
+
   
-  // Start camera stream - removed facingMode toggle
   const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment', // Fixed to environment camera
-          width: { ideal: 1280 },
-          height: { ideal: 720 }
-        },
-        audio: true // Keep microphone enabled
-      });
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsStreaming(true);
-        setError('');
-        
-        // Process audio to prevent feedback
-        try {
-          // Get the audio context and create a muted destination
-          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-          const source = audioContext.createMediaStreamSource(stream);
-          
-          // By not connecting to audioContext.destination, we prevent feedback
-          // Instead, connect to a gain node with zero gain (silent)
-          const gainNode = audioContext.createGain();
-          gainNode.gain.value = 0;
-          source.connect(gainNode);
-          gainNode.connect(audioContext.destination);
-        } catch (audioErr) {
-          console.warn('Could not process audio:', audioErr);
-        }
-      }
-    } catch (err) {
-      setError('Failed to access camera: ' + err.message);
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: 'environment',
+        width: { ideal: 1280 },
+        height: { ideal: 720 }
+      },
+      audio: true
+    });
+
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream;
+      setIsStreaming(true);
+      setError('');
     }
-  };
+
+    // Setup MediaRecorder for audio recording
+    const audioStream = new MediaStream(stream.getAudioTracks());
+    mediaRecorderRef.current = new MediaRecorder(audioStream);
+    audioChunksRef.current = [];
+
+    mediaRecorderRef.current.ondataavailable = (e) => {
+      if (e.data.size > 0) {
+        audioChunksRef.current.push(e.data);
+      }
+    };
+
+mediaRecorderRef.current.onstop = async () => {
+  const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+
+  try {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'recording.wav'); // must match "audio.wav" in backend
+
+    const res = await fetch('/api/submit-audio', {
+      method: 'POST',
+      body: formData,
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) throw new Error(result.error);
+    console.log('✅ Audio processed:', result);
+
+    setVideoUrl(result.video);
+    setReceivedAudioUrl(true); // Assuming you want to set the audio URL too
+    // setAudioUrl(result.audio);
+  } catch (err) {
+    console.error('❌ Direct audio submit failed:', err);
+    setError('Submit failed: ' + err.message);
+  }
+};
+
+
+
+
+  
+
+  } catch (err) {
+    setError('Failed to access camera: ' + err.message);
+  }
+};
+
 
   // Auto-hide details panel after 7 seconds
   useEffect(() => {
     let timer = null;
     
-    if (imageRecognized && displayDetails) {
+    if (isTalking && displayDetails) {
       timer = setTimeout(() => {
         setDisplayDetails(false);
       }, 7000); // 7 seconds
@@ -62,7 +95,7 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [imageRecognized, displayDetails]);
+  }, [isTalking, displayDetails]);
 
   // Start camera when component mounts
   useEffect(() => {
@@ -96,38 +129,40 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
     };
   }, []); // Removed facingMode dependency
 
-  // Fix handleMuteButtonClick function
+  // Fixed handleMuteButtonClick function
   
-  const handleMuteButtonClick = async () => {
-    try {
-      // Toggle audio tracks
-      if (videoRef.current && videoRef.current.srcObject) {
-        const audioTracks = videoRef.current.srcObject.getAudioTracks();
-        audioTracks.forEach(track => {
-          track.enabled = !track.enabled;
-        });
-        setIsMuted(prevState => !prevState);
-        
-        // Call API when unmuting (starting to talk)
-        if (!isMuted) {
-          console.log('Submitting audio to API...');
-          const response = await fetch('/api/submitAudio', { 
-            method: 'POST' 
-          });
-          
-          if (!response.ok) {
-            console.error('Failed to submit audio:', await response.text());
-          } else {
-            const data = await response.json();
-            console.log('Audio submission successful:', data);
-          }
-        }
+const handleMuteButtonClick = async () => {
+  try {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const audioTracks = videoRef.current.srcObject.getAudioTracks();
+      const willBeMuted = !isMuted;
+
+      audioTracks.forEach(track => {
+        track.enabled = !willBeMuted;
+      });
+
+      setIsMuted(willBeMuted);
+
+      if (!willBeMuted) {
+        // Microphone unmuted: start recording
+        console.log('Unmuting and starting audio recording...');
+        audioChunksRef.current = [];
+        mediaRecorderRef.current?.start();
+      } else {
+        // Microphone muted: stop recording and save
+        console.log('Muting and stopping audio recording...');
+        mediaRecorderRef.current?.stop();
       }
-    } catch (error) {
-      console.error('Error toggling mute or submitting audio:', error);
-      setError('Failed to process audio: ' + error.message);
     }
-  };
+  } catch (error) {
+    console.error('Audio toggle error:', error);
+    setError('Failed to process audio: ' + error.message);
+  }
+};
+
+
+        
+       
 
   return (
     <div className="flex flex-col h-full bg-gray-900 text-white">
@@ -147,7 +182,7 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
           </div>
         )}
 
-        {imageRecognized && displayDetails && (
+        {/* {imageRecognized && displayDetails && (
           <div className="absolute top-10 left-0 right-0 pl-15 z-20">
             <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs mx-auto">
               <h2 className="text-[#FFB902] font-bold text-lg mb-2">
@@ -159,7 +194,7 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
               </div>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* Show button when image is recognized and not talking */}
         {imageRecognized && !isTalking && (
@@ -168,7 +203,7 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
               bg-yellow-400 hover:opacity-90 text-white flex items-center justify-center shadow-lg z-10 text-lg font-bold"
             onClick={() => {
               setIsTalking(true);
-              setDisplayDetails(false);
+              setDisplayDetails(true);
               setImageRecognized(false);
               handleMuteButtonClick();
             }}
@@ -179,30 +214,54 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
 
         {/* Show control buttons when talking - removed toggle camera button */}
         {isTalking && (
-          <div className="absolute inset-x-0 bottom-25 flex justify-center gap-3 z-20">
+          <div>
+          {videoUrl &&
+            <div className='absolute bottom-9 left-0 right-0 flex justify-center z-15 w-screen h-1/2'>
+              <video
+                key={videoUrl}  // 🔑 Forces remount on URL change
+                width="100%"
+                className="rounded-lg shadow"
+                autoPlay
+                playsInline
+              >
+                <source src={videoUrl} type="video/mp4" />
+              </video>
+            </div>
+          }
 
+              
+              {displayDetails && (
+                <div className="absolute top-10 left-0 right-0 pl-15 z-20">
+                  <div className="bg-white p-4 rounded-2xl shadow-md w-fit max-w-xs mx-auto">
+                    <h2 className="text-[#FFB902] font-bold text-lg mb-2">
+                      Tun V. T. Sambanthan
+                    </h2>
+                    <div className="border-l-4 border-[#CB1F40] pl-3 space-y-1 text-sm text-gray-700">
+                      <p>Former Minister of Malaysia</p>
+                      <p>Years Served: 1972 - 1974</p>
+                    </div>
+                  </div>
+                </div>
+                )}
+
+           <div className='absolute bottom-3 left-0 right-0 flex justify-center z-10 w-screen h-1/2'>
+              <img src="/Tun_Static.png" alt="tun" className="w-100 h-100" />
+            </div>
+              
+          <div className="absolute inset-x-0 bottom-25 flex justify-center gap-3 z-20">
             <button
               className="p-4 rounded-full bg-white/20 backdrop-blur-sm"
-              onClick={() => {
-                // Toggle audio tracks
-                if (videoRef.current && videoRef.current.srcObject) {
-                  const audioTracks = videoRef.current.srcObject.getAudioTracks();
-                  audioTracks.forEach(track => {
-                    track.enabled = !track.enabled;
-                  });
-                  setIsMuted(prevState => !prevState);
-                }
-              }}
+              onClick={handleMuteButtonClick}
             >
               {isMuted ? (
                 // Muted icon (microphone with slash)
-                <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 z-100" fill="none" stroke="white" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3l18 18" />
                 </svg>
               ) : (
                 // Unmuted icon (microphone)
-                <svg className="w-5 h-5" fill="none" stroke="white" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 z-100" fill="none" stroke="white" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
                 </svg>
               )}
@@ -221,6 +280,7 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
               </svg>
             </button>
           </div>
+          </div>
         )}
       </div>
       <button
@@ -228,7 +288,13 @@ const [isMuted, setIsMuted] = useState(true); // Default to muted
           setImageRecognized(true);
           setDisplayDetails(true);
         }}
-        className="absolute w-10 h-20 right-6 bottom-25 px-4 py-2 rounded-lg border border-white/50 bg-transparent hover:bg-white/10 text-sm text-white font-medium backdrop-blur-sm shadow-sm transition-colors"
+        className="z-100 absolute w-10 h-20 right-6 bottom-25 
+                  bg-transparent text-transparent border-none 
+                  cursor-pointer outline-none"
+        style={{
+          pointerEvents: 'auto',  // ensure it's clickable
+          backgroundColor: 'transparent',
+        }}
       >
         
       </button>
