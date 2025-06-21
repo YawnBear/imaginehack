@@ -1,11 +1,11 @@
 import { useState } from 'react';
 
-export default function Details({id, setDetails }) {
+export default function Details({setDetails }) {
   const [showOptions, setShowOptions] = useState(false);
   
   // If no figure is passed, use default data
   const figureData = {
-    id: 1,
+    id: 2,
     name: 'Tunku Abdul Rahman',
     title: 'Former Prime Minister of Malaysia',
     image: '/tunku.jpg',
@@ -20,7 +20,7 @@ export default function Details({id, setDetails }) {
 
   return (
     <>
-      {id === 2 && (
+      {figureData.id === 2 && (
         <div className="min-h-screen bg-gray-100">
           {/* Header with image */}
           <div className="relative h-96">

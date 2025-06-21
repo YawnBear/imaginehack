@@ -4,7 +4,7 @@ import { useState } from 'react';
 import Call from '@/components/Camera.jsx';
 import Home from '@/components/Home.jsx';
 import Collection from '@/components/Collection.jsx';
-import Map from '@/components/Map.jsx';
+import Map from '@/components/Location.jsx';
 import Profile from '@/components/Profile.jsx';
 import NavBar from '@/components/NavBar.jsx';
 
