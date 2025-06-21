@@ -22,13 +22,29 @@ export default function Camera() {
           width: { ideal: 1280 },
           height: { ideal: 720 }
         },
-        audio: true // Enable microphone
+        audio: true // Keep microphone enabled
       });
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         setIsStreaming(true);
         setError('');
+        
+        // Process audio to prevent feedback
+        try {
+          // Get the audio context and create a muted destination
+          const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+          const source = audioContext.createMediaStreamSource(stream);
+          
+          // By not connecting to audioContext.destination, we prevent feedback
+          // Instead, connect to a gain node with zero gain (silent)
+          const gainNode = audioContext.createGain();
+          gainNode.gain.value = 0;
+          source.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+        } catch (audioErr) {
+          console.warn('Could not process audio:', audioErr);
+        }
       }
     } catch (err) {
       setError('Failed to access camera: ' + err.message);
